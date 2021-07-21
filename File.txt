@@ -1,0 +1,10 @@
+Welcome to  devops 
+
+From Krishna sai to Everyone:  08:19 AM
+git config --global user.name "Krishna"
+git config --global user.email "...."
+From Krishna sai to Everyone:  08:25 AM
+git config --global http.sslverify "false"
+git con
+
+
