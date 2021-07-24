@@ -1,0 +1,49 @@
+select PayeeName, count(*)
+ NumberOfPaymentFrequency from (
+select Main.TransactionReferenceNo, Main.PaymentNumber,Main.DealNumber,Main.CustomerName,Main.RelationshipdManager,
+Main.IsConverted,Main.ExchangeRate,Main.ReceivedAmount,Main.UETR,Main.RemittanceNumber, Main.ExternalID, Main.PayeeName,
+Main.Currency, Main.Amount,CAST(Main.Amount as nvarchar) +' '+ Main.Currency AS SentAmount, Main.StatusCode, CASE WHEN
+Main.StatusCode LIKE '%ACSP%' THEN 'In Progress' WHEN Main.StatusCode LIKE '%ACSC%' THEN 'Completed'
+WHEN Main.StatusCode LIKE '%ACCC%' THEN 'Completed' WHEN Main.StatusCode LIKE '%RJCT%' THEN 'Rejected'
+WHEN Main.StatusCode LIKE '%RETN%' THEN 'Returned' ELSE '' END AS [Status], CASE WHEN Main.Amount=RTRIM(left(Main.ReceivedAmount,len(Main.ReceivedAmount)-4)) THEN 'Amt Same' ELSE 'Amt Not Same' END AS [AmtFlag], FORMAT (Main.StatusUpdateDate, 'dd/MM/yyyy, hh:mm:tt') AS [WhenCreated]
+from ( select * from AFXSwiftNetworkTracking T
+where T.ID in ( select max(ID) from AFXSwiftNetworkTracking group by TransactionReferenceNo ) ) as Main
+where Main.StatusCode Is not null and Main.TransactionReferenceNo!='' AND Main.IsConverted =1 AND Main.StatusUpdateDate 
+BETWEEN '09/30/2020' and '12/31/2020'
+) as a 
+group by PayeeName having count(*)
+ >1
+order by count(*) desc
+
+
+
+
+select Main.PayeeName,Main.TransactionReferenceNo, Main.PaymentNumber,Main.DealNumber,Main.CustomerName,Main.RelationshipdManager,
+Main.IsConverted,Main.ExchangeRate,Main.ReceivedAmount,Main.UETR,Main.RemittanceNumber, Main.ExternalID, 
+Main.Currency, Main.Amount,CAST(Main.Amount as nvarchar) +' '+ Main.Currency AS SentAmount, Main.StatusCode, CASE WHEN
+Main.StatusCode LIKE '%ACSP%' THEN 'In Progress' WHEN Main.StatusCode LIKE '%ACSC%' THEN 'Completed'
+WHEN Main.StatusCode LIKE '%ACCC%' THEN 'Completed' WHEN Main.StatusCode LIKE '%RJCT%' THEN 'Rejected'
+WHEN Main.StatusCode LIKE '%RETN%' THEN 'Returned' ELSE '' END AS [Status], CASE WHEN Main.Amount=RTRIM(left(Main.ReceivedAmount,len(Main.ReceivedAmount)-4)) THEN 'Amt Same' ELSE 'Amt Not Same' END AS [AmtFlag], FORMAT (Main.StatusUpdateDate, 'dd/MM/yyyy, hh:mm:tt') AS [WhenCreated]
+from ( select * from AFXSwiftNetworkTracking T
+where T.ID in ( select max(ID) from AFXSwiftNetworkTracking group by TransactionReferenceNo ) ) as Main
+where Main.StatusCode Is not null and Main.TransactionReferenceNo!='' AND Main.IsConverted =1 AND Main.StatusUpdateDate 
+BETWEEN '09/30/2020' and '12/31/2020'
+and isnull(Main.PayeeName,'') <> ''
+and Main.PayeeName in (
+select PayeeName from (
+select Main.TransactionReferenceNo, Main.PaymentNumber,Main.DealNumber,Main.CustomerName,Main.RelationshipdManager,
+Main.IsConverted,Main.ExchangeRate,Main.ReceivedAmount,Main.UETR,Main.RemittanceNumber, Main.ExternalID, Main.PayeeName,
+Main.Currency, Main.Amount,CAST(Main.Amount as nvarchar) +' '+ Main.Currency AS SentAmount, Main.StatusCode, CASE WHEN
+Main.StatusCode LIKE '%ACSP%' THEN 'In Progress' WHEN Main.StatusCode LIKE '%ACSC%' THEN 'Completed'
+WHEN Main.StatusCode LIKE '%ACCC%' THEN 'Completed' WHEN Main.StatusCode LIKE '%RJCT%' THEN 'Rejected'
+WHEN Main.StatusCode LIKE '%RETN%' THEN 'Returned' ELSE '' END AS [Status], CASE WHEN Main.Amount=RTRIM(left(Main.ReceivedAmount,len(Main.ReceivedAmount)-4)) THEN 'Amt Same' ELSE 'Amt Not Same' END AS [AmtFlag], FORMAT (Main.StatusUpdateDate, 'dd/MM/yyyy, hh:mm:tt') AS [WhenCreated]
+from ( select * from AFXSwiftNetworkTracking T
+where T.ID in ( select max(ID) from AFXSwiftNetworkTracking group by TransactionReferenceNo ) ) as Main
+where Main.StatusCode Is not null and Main.TransactionReferenceNo!='' AND Main.IsConverted =1 AND Main.StatusUpdateDate 
+BETWEEN '09/30/2020' and '12/31/2020'
+) as a 
+group by PayeeName having count(*)
+ >1
+)
+order by 
+Main.PayeeName Asc

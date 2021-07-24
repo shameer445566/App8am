@@ -1,0 +1,63 @@
+https://us02web.zoom.us/j/8149631221
+
+https://classroom.google.com/u/2/c/MzcwMzk2MDA4MDg5/m/MzcwNDAwMTMzODky/details
+
+4
+
+https://us02web.zoom.us/j/8149671221
+
+Meeting ID: 814 967 1221
+
+
+
+From Krishna sai to Everyone:  08:19 AM
+git config --global user.name "Krishna"
+git config --global user.email "...."
+From Krishna sai to Everyone:  08:25 AM
+git config --global http.sslverify "false"
+git con
+
+
+
+$ git config --global user.name ''shameer''
+$ git config --global user.email ''mahammadshameer24@gmail.com''
+$ git config --global http.sslverify ''false''
+$ git config --list
+
+GitHub online
+mail: mahammadshameer24@gmail.com
+Password: Server@456
+username: Shameer445566
+
+
+$ git init
+$ git status
+$ git add File.txt
+$ git commit -m ''added File.txt by engineer1''   or git commit -m ''File''
+
+error : https://www.youtube.com/watch?v=Bkk1aVKccAs
+
+
+$ git remote add origin https://github.com/shameer445566/App8am.git
+$ git push origin master
+
+check git online 
+---------------
+second file
+
+$git status
+$git add .
+$git commit -m ''added File1.txt by hari''
+$ git push origin master
+
+git log --oneline
+
+
+$ git init
+$ git status
+$ git add File.txt
+$git commit -m ''sample1''
+$ git push origin master
+
+
+
