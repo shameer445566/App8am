@@ -1,0 +1,162 @@
+
+create procedure [dbo].[uspInventoryPurchaseStockUpdate]                          
+@ID int,                                  
+@ClientID int,                                
+@LPONumber varchar(100),                                
+@LPOFileName varchar(500),                                
+@LPOOriginalFileName varchar(500),                                
+@InventoryType varchar(50),                                
+@DepartmentID int,                                
+@LocationID int,                                
+@VendorID int,                                
+@VendorInvoiceNumber varchar(100),
+@InvoiceDate datetime,                                
+@InvoiceFileName varchar(500),                                
+@InvoiceOriginalFileName varchar(500),                                
+@COONumber varchar(100),                                
+@COOFileName varchar(500),                                
+@COOOriginalFileName varchar(500),                                
+@VendorShipmentNumber varchar(100),                                
+@PackingListFileName varchar(500),                                
+@PackingListOriginalFileName varchar(500),                                
+@AWBNumber varchar(100),                                
+@AWBFileName varchar(500),                                
+@AWBOriginalFileName varchar(500),           
+@BOE varchar(100),                                
+@BOEFileName varchar(500),                                
+@BOEOriginalFileName varchar(500),                               
+@ManualFileName varchar(500),                                
+@ManualOriginalFileName varchar(500),                                
+@PartPictureFileName varchar(500),                                
+@PartPictureOriginalFileName varchar(500),                                
+@Notes varchar(max),                                
+@CreatedBy int,        
+@InvoiceCurrencyID int,        
+@DomesticCurrencyID int,        
+@FXRate decimal(18,4),        
+@SubTotalStockValueInvoice decimal(18,2),       
+@InventoryPurchaseStockInvoiceType InventoryPurchaseStockInvoiceType readonly,
+@BOEDate datetime
+as                                  
+declare @ActualUnitCostDomestic decimal(18,2),@TotalStockValueDomestic decimal(18,2),@PartID int, @InvQuantity int,@MaxCounter int,@counter int      
+
+BEGIN  
+update InventoryPurchaseStock set  
+ClientID=@ClientID,  
+LPONumber=@LPONumber,  
+LPOFileName=@LPOFileName,  
+LPOOriginalFileName=@LPOOriginalFileName,  
+InventoryType=@InventoryType,  
+DepartmentID=@DepartmentID,  
+LocationID=@LocationID,  
+VendorID=@VendorID,  
+VendorInvoiceNumber=@VendorInvoiceNumber,
+InvoiceDate=@InvoiceDate,  
+InvoiceFileName=@InvoiceFileName,  
+InvoiceOriginalFileName=@InvoiceOriginalFileName,  
+COONumber=@COONumber,  
+COOFileName=@COOFileName,  
+COOOriginalFileName=@COOOriginalFileName,  
+VendorShipmentNumber=@VendorShipmentNumber,  
+PackingListFileName=@PackingListFileName,  
+PackingListOriginalFileName=@PackingListOriginalFileName,  
+AWBNumber=@AWBNumber,  
+AWBFileName=@AWBFileName,  
+AWBOriginalFileName=@AWBOriginalFileName,  
+ManualFileName=@ManualFileName,  
+ManualOriginalFileName=@ManualOriginalFileName,  
+PartPictureFileName=@PartPictureFileName,  
+PartPictureOriginalFileName=@PartPictureOriginalFileName,  
+Notes=@Notes,  
+ModifiedBy=@CreatedBy,  
+ModifiedOn=GETDATE(),  
+Version=ISNULL(Version,1)+1,  
+BOE=@BOE,  
+BOEFileName=@BOEFileName,  
+BOEOriginalFileName=@BOEOriginalFileName,
+BOEDate=@BOEDate  
+where ID=@ID  
+  
+update InventoryPurchaseStockPaymentDetail set  
+SubTotalStockValueInvoice=@SubTotalStockValueInvoice,  
+SubTotalStockValueDomestic=@SubTotalStockValueInvoice*@FXRate,
+ModifiedBy=@CreatedBy,        
+ModifiedOn=GETDATE()          
+where InventoryPurchaseStockID=@ID  
+
+
+declare @TotalDepositAmount decimal(18,2)
+ 
+select @TotalDepositAmount=ISNULL(SUM(app.Amount),0) from InventoryPurchaseStockPaymentDetail ipspd 
+inner join AccountsPayble ap on ipspd.ID=ap.ModuleParentID and ap.ModuleName='InventoryPurchaseStockPaymentDetail'
+inner join AccountsPayblePayment app on ap.ID=app.AccountsPaybleID
+  where InventoryPurchaseStockID=@ID
+  
+
+update ap set ap.Amount= ipspd.SubTotalStockValueDomestic,
+ap.PaymentStatusID = case when @TotalDepositAmount <=ipspd.SubTotalStockValueDomestic then 1 else 2 end,
+ap.OutstandingAmount = case when @TotalDepositAmount <=ipspd.SubTotalStockValueDomestic then ipspd.SubTotalStockValueDomestic-@TotalDepositAmount else 0 end
+ from AccountsPayble ap inner join InventoryPurchaseStockPaymentDetail ipspd on ap.ModuleParentID=ipspd.ID and ap.ModuleName='InventoryPurchaseStockPaymentDetail' where InventoryPurchaseStockID=@ID
+  
+  
+--/* Update Inventory Item Stock */       
+select @MaxCounter  = (select count(*) from @InventoryPurchaseStockInvoiceType)                                    
+set @counter  = 1                                    
+while @counter <=  @MaxCounter                                  
+BEGIN       
+ declare @InventoryPurchaseStockInvoiceTypeID int,@preQuantity decimal(18,2), @preInventoryType varchar(50),@UnitCostInvoice decimal(18,2)  
+ declare @TaxInvoice decimal(18,2),@ActualUnitCostInvoice decimal(18,2),@Quantity int,@TotalStockValueInvoice decimal(18,2),@InvFXRate decimal(18,4)  
+ declare @UnitCostDomestic decimal(18,2)  
+ select @InventoryPurchaseStockInvoiceTypeID=ID,@PartID=PartID,@Quantity=Quantity,@UnitCostInvoice=UnitCostInvoice,@TaxInvoice=TaxInvoice,  
+ @ActualUnitCostInvoice=ActualUnitCostInvoice,@Quantity=Quantity,@TotalStockValueInvoice=TotalStockValueInvoice,@InvFXRate=FXRate,  
+ @UnitCostDomestic=UnitCostDomestic,@ActualUnitCostDomestic=ActualUnitCostDomestic,@TotalStockValueDomestic=TotalStockValueDomestic  
+  from @InventoryPurchaseStockInvoiceType where RowCounter=@counter  
+   
+    
+ select @preQuantity=Quantity, @preInventoryType=InventoryType from InventoryPurchaseStockInvoice where ID=@InventoryPurchaseStockInvoiceTypeID  
+    
+ update InventoryPurchaseStockInvoice set  
+  UnitCostInvoice=@UnitCostInvoice,  
+  TaxInvoice=@TaxInvoice,  
+  ActualUnitCostInvoice=@ActualUnitCostInvoice,  
+  Quantity=@Quantity,  
+  TotalStockValueInvoice=@TotalStockValueInvoice,  
+  FXRate=@InvFXRate,  
+  UnitCostDomestic=@UnitCostDomestic,  
+  ActualUnitCostDomestic=@ActualUnitCostDomestic,  
+  TotalStockValueDomestic=@TotalStockValueDomestic,  
+  QuantityAvailable=@Quantity,  
+  QuantityWithdraw=0,  
+  AvailableStockValue=@TotalStockValueDomestic  
+ where ID=@InventoryPurchaseStockInvoiceTypeID    
+   
+   
+ select @InvQuantity= ISNULL(SUM(QuantityAvailable),0) ,@ActualUnitCostDomestic = ISNULL(SUM(AvailableStockValue)/ nullif(SUM(QuantityAvailable),0),0),@TotalStockValueDomestic=ISNULL(SUM(AvailableStockValue),0) from InventoryPurchaseStockInvoice where Par
+tID=@PartID and InventoryType=@InventoryType                
+           
+   
+if(@InventoryType='Normal')                       
+Update InventoryItem set                         
+NormalUnitCost= @ActualUnitCostDomestic,                        
+NormalQuantity= @InvQuantity,
+NormalTotalCost= @TotalStockValueDomestic,                
+ModifiedBy=@CreatedBy,                        
+ModifiedOn=getdate()                        
+where ID=@PartID                        
+if(@InventoryType='Consignment')                        
+Update InventoryItem set                        
+ConsignmentUnitCost= @ActualUnitCostDomestic,                        
+ConsignmentQuantity= @InvQuantity,
+ConsignmentTotalCost = @TotalStockValueDomestic,                
+ModifiedBy=@CreatedBy,                        
+ModifiedOn=getdate()                        
+where ID=@PartID    
+    
+   
+        
+ set @counter = @counter +1                                    
+END        
+  
+  
+END  
+  
