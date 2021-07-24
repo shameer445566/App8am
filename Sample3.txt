@@ -1,0 +1,50 @@
+select AFXRevenueChannelMaster.Name , count(*)
+
+DealCount
+from AFX_WEB_LIVE_2.dbo.AFXOrderNew AON
+join AFX_LIVE.dbo.SEC_MODULE_WEB mid on AON.ModuleID = mid.module_id
+join AFX_LIVE.dbo.SEC_USER_ORGANIZATION suoc on AON.WhoCreated = suoc.composite_id
+join AFX_LIVE.dbo.SEC_USER suc on suc.USER_ID = suoc.USER_ID
+join AFX_LIVE.dbo.SEC_USER_ORGANIZATION suou on AON.WhoModified = suou.composite_id
+join AFX_LIVE.dbo.SEC_USER suu on suu.USER_ID = suou.USER_ID
+--join AFXLuOrderStatus on AON.orderstatusid = AFXLuOrderStatus.OrderStatusID
+ join AFXRevenueChannelMaster on AFXRevenueChannelMaster.ID = isnull(AON.RevenueChannelID,1)
+where WhenCreated between '2020-12-01 00:00:00.000' and '2020-12-31 00:00:00.000' and AON.FXoDealNumber is not null
+group by AFXRevenueChannelMaster.Name
+Union all
+select 'FxOfficeDeals' as Name,count(*)
+
+DealCount from AFX_LIVE.dbo.DLG_DEAL
+where IS_DELETED = 0 and IS_APPROVED =1 
+and created_on between '2020-12-01 00:00:00.000' and '2020-12-31 00:00:00.000'
+and IS_BATCH is null
+
+
+
+
+select OrderID,
+mid.module_name as [Module Name],
+AFXLuOrderStatus.Summary as [Order Status],
+AON.NumberOfPayment as [Number of Payments],
+AON.WhenModified as [When Created],
+suu.FULL_NAME as [Who Created],
+AON.WhenModified as [When Modified],
+suc.FULL_NAME as [Who Modified],
+AON.FXODealID as [FXO Deal ID],
+AON.FXoDealNumber as [Deal Number],
+AON.DealCreator as [Deal Creator],
+AON.FinalApprover as [Final Approver],
+AON.WhenApproved as [When Approved],
+AON.ReferenceDealNumber as [Reference Deal Number],
+AON.ScheduleDate as [Schedule Date],
+AFXRevenueChannelMaster.Name as [Revenue Channel]
+from AFX_WEB_LIVE_2.dbo.AFXOrderNew AON
+join afx_live.dbo.SEC_MODULE_WEB mid on AON.ModuleID = mid.module_id
+join afx_LIVE.dbo.SEC_USER_ORGANIZATION suoc on AON.WhoCreated = suoc.composite_id
+join Afx_LIVE.dbo.SEC_USER suc on suc.USER_ID = suoc.USER_ID
+join Afx_LIVE.dbo.SEC_USER_ORGANIZATION suou on AON.WhoModified = suou.composite_id
+join Afx_LIVE.dbo.SEC_USER suu on suu.USER_ID = suou.USER_ID
+join AFXLuOrderStatus on AON.orderstatusid = AFXLuOrderStatus.OrderStatusID
+join AFXRevenueChannelMaster on AFXRevenueChannelMaster.ID = AON.RevenueChannelID
+where AON.RevenueChannelID =3 and WhenCreated between '2020-12-01 00:00:00.000' and '2020-12-31 00:00:00.000' and AON.FXoDealNumber is not null
+order by AON.WhenCreated desc
