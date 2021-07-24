@@ -1,0 +1,12 @@
+select RDMClientCode, * from AFXClient where FXOEntityName ='Sherburne State Bank'
+
+begin transaction
+
+--update AFXClient set RDMClientCode ='RDM0001089362' where ID =3758 and FXOEntityNo = 042205009
+
+commit transaction
+
+
+RDM0001148465
+
+
