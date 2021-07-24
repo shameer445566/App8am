@@ -1,0 +1,3 @@
+
+exec AFXSPGetSpreadRates '7403','49','40000','53','L','A','USD','EUR'
+
